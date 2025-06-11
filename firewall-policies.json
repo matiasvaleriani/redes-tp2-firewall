@@ -1,0 +1,27 @@
+{
+	"name": "Grupo 4 - Firewall policies",
+	"firewall_switch_id": 1,
+	"discard_policies": [
+		{
+			"tp_dst": "80",
+			"nw_proto": "tcp"
+		},
+		{
+			"tp_dst": "80",
+			"nw_proto": "udp"
+		},
+		{
+			"tp_dst": "5001",
+			"nw_proto": "udp",
+			"dl_src": "00:00:00:00:00:01"
+		},
+		{
+			"dl_src": "00:00:00:00:00:02",
+			"dl_dst": "00:00:00:00:00:03"
+		},
+		{
+			"dl_src": "00:00:00:00:00:03",
+			"dl_dst": "00:00:00:00:00:02"
+		}
+	]
+}
