@@ -19,10 +19,10 @@ import pox.lib.packet as pkt
 import json
 
 COLOR_CODES = {
-    'BLUE': '\033[94m',  # Blue
-    'GREEN': '\033[92m',   # Green
-    'YELLOW': '\033[93m',  # Yellow
-    'RED': '\033[91m',   # Red
+    'BLUE': '\033[94m',
+    'GREEN': '\033[92m',
+    'YELLOW': '\033[93m',
+    'RED': '\033[91m',
     "RESET": '\033[0m'
 }
 
