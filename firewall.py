@@ -24,6 +24,8 @@ COLOR_CODES = {
     'GREEN': '\033[92m',
     'GREY': '\033[90m',
     'BLACK': '\033[30m',
+    'WHITE': '\033[97m',
+    'LIGHT_GREEN': '\033[92;1m',
     "RESET": '\033[0m'
 }
 
@@ -86,8 +88,13 @@ class Firewall (EventMixin):
         dpid = COLOR_CODES['GREEN'] + str(event.dpid) + COLOR_CODES['RESET']
         protocol = COLOR_CODES['GREY'] + protocol + COLOR_CODES['RESET']
 
-        log.info(f"{dpid}:Packet: {protocol} {sender + ' --> ' + receiver}")
-
+        log.info(
+            f"{COLOR_CODES['WHITE']}[SW:{COLOR_CODES['GREEN']}{dpid}{COLOR_CODES['WHITE']}] "
+            f"PROTO:{COLOR_CODES['GREY']}{protocol}{COLOR_CODES['WHITE']} "
+            f"SRC:{COLOR_CODES['CYAN']}{sender}{COLOR_CODES['WHITE']} "
+            f"DST:{COLOR_CODES['LIGHT_GREEN']}{receiver}{COLOR_CODES['WHITE']}{COLOR_CODES['RESET']}"
+        )
+        
     def _handle_ConnectionUp(self, event):
         if event.dpid == self.switch_id:
             self.set_policies(event)
