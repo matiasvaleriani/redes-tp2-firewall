@@ -1,6 +1,6 @@
 from mininet.topo import Topo
 
-MAX_HOSTS = 4
+CANTIDAD_HOSTS = 4
 
 
 class MyTopo(Topo):
@@ -13,7 +13,7 @@ class MyTopo(Topo):
         # --- ETAPA 1: Declarar hosts ---
         # Se crean 4 hosts con MACs fijas
         hosts = [self.addHost(f'h{i}', mac=f"00:00:00:00:00:{i}")
-                 for i in range(1, MAX_HOSTS + 1)]
+                 for i in range(1, CANTIDAD_HOSTS + 1)]
         
         # --- ETAPA 2: Declarar switches ---
         # Se crea una cantidad variable de switches conectados en cadena
