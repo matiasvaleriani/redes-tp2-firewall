@@ -30,7 +30,7 @@ COLOR_CODES = {
 }
 
 log = core.getLogger()
-policyFile = "%s/pox/pox/misc/firewall-policies.csv" % os.environ['HOME']
+#policyFile = "%s/pox/pox/misc/firewall-policies.csv" % os.environ['HOME']
 
 POLICY_FILE_PATH = "./firewall-policies.json"
 
@@ -51,10 +51,15 @@ class Firewall (EventMixin):
         self.listenTo(core.openflow)
         self.load_policies()
         log.info("Enabling Firewall Module")
+        #PacketIn -> cuando llega un paquete al controlador
         core.openflow.addListenerByName("PacketIn", self._handle_PacketIn)
 
     def __get_destination(self, ip_packet):
-        # Check if the IP packet is a TCP or UDP packet
+        """
+        Si el paquete es TCP, devuelve ("TCP", src_port, dst_port).
+        Si es UDP, devuelve ("UDP", src_port, dst_port).
+        Si es ICMP, devuelve ("ICMP", '', '').
+        """
         protocol = ip_packet.protocol
 
         if protocol == pkt.ipv4.TCP_PROTOCOL:
@@ -73,8 +78,12 @@ class Firewall (EventMixin):
         return ("ICMP" if protocol == pkt.ipv4.ICMP_PROTOCOL else str(protocol), '', '')
 
     def _handle_PacketIn(self, event):
+        # Se llama cada vez que llega un paquete al controlador
         packet = event.parsed.find('ipv4')
-
+        # Esto no se si va, pero lo dejo por si acaso, 
+        # sino queda solo ipv4
+        # if not packet:
+        #     packet = event.parsed.find('ipv6')
         if not packet:
             return
 
@@ -96,13 +105,17 @@ class Firewall (EventMixin):
         )
         
     def _handle_ConnectionUp(self, event):
+        """
+        Se ejecuta cuando un switch se conecta al controlador
+        Si el switch es el que tiene las políticas de firewall, se instalan las reglas
+        """
         if event.dpid == self.switch_id:
             self.set_policies(event)
             log.info("Firewall rules installed on %s", dpidToStr(event.dpid))
 
     def load_policies(self):
         """
-        Load the firewall policies from the file
+        Lee el JSON de las políticas de firewall y las carga en la instancia
         """
         with open(POLICY_FILE_PATH, 'r') as f:
             content = json.load(f)
@@ -111,9 +124,10 @@ class Firewall (EventMixin):
 
     def set_policies(self, event):
         """
-        Set the firewall policies on the event, if there is no nw_proto or dl_type in the policy, generate all variants
+        Establece las políticas de firewall en el evento, si no hay nw_proto o dl_type en la política, genera todas las variantes
         """
 
+        #Bloquea todo el tráfico IPv6 que no coincida con las políticas
         r = of.ofp_flow_mod()
         r.match.__setattr__("dl_type", pkt.ethernet.IPV6_TYPE)
         event.connection.send(r)
@@ -135,7 +149,7 @@ class Firewall (EventMixin):
 
     def _rule_from_policy(self, policy):
         """
-        Generate a rule from the policy
+        Traduce una politica del JSON a una regla de OpenFlow
         """
         rule = of.ofp_flow_mod()
         for (field, value) in sorted(policy.items()):
@@ -171,7 +185,8 @@ class Firewall (EventMixin):
 
     def _generate_variants(self, policies, field, values):
         """
-        Generate all variants of the policies with the field set to the values
+        Si una politica no especifica un campo, genera variantes para
+        todos los valores posibles (TCP, UDP, ICMP).
         """
         new_policies = []
 
@@ -186,6 +201,6 @@ class Firewall (EventMixin):
 
 def launch():
     '''
-    Starting the Firewall module
+    Lanza el firewall al iniciar el controlador
     '''
     core.registerNew(Firewall)
