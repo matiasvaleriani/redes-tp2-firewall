@@ -30,18 +30,19 @@ COLOR_CODES = {
 }
 
 log = core.getLogger()
-#policyFile = "%s/pox/pox/misc/firewall-policies.csv" % os.environ['HOME']
 
 POLICY_FILE_PATH = "./firewall-policies.json"
 
 DL_TYPE = {
-    "ipv4": pkt.ethernet.IP_TYPE
+    "ipv4": pkt.ethernet.IP_TYPE,
+    "ipv6": pkt.ethernet.IPV6_TYPE,
 }
 
 NW_PROTO = {
     "tcp": pkt.ipv4.TCP_PROTOCOL,
     "udp": pkt.ipv4.UDP_PROTOCOL,
-    "icmp": pkt.ipv4.ICMP_PROTOCOL
+    "icmp": pkt.ipv4.ICMP_PROTOCOL,
+    "icmpv6": pkt.ipv6.ICMP6_PROTOCOL,
 }
 
 
@@ -56,34 +57,40 @@ class Firewall (EventMixin):
 
     def __get_destination(self, ip_packet):
         """
-        Si el paquete es TCP, devuelve ("TCP", src_port, dst_port).
-        Si es UDP, devuelve ("UDP", src_port, dst_port).
-        Si es ICMP, devuelve ("ICMP", '', '').
+        Determina el protocolo y los puertos de origen y destino del paquete IP.
+        Retorna una tupla con el protocolo, puerto de origen y puerto de destino.
+        Si no se encuentra el protocolo o los puertos, retorna una tupla con valores vacíos.
         """
-        protocol = ip_packet.protocol
+        if ip_packet.__class__.__name__ == 'ipv4':
+            protocol = ip_packet.protocol
+        elif ip_packet.__class__.__name__ == 'ipv6':
+            protocol = ip_packet.next_header_type
+        else:
+            return (str(type(ip_packet)), '', '')
 
-        if protocol == pkt.ipv4.TCP_PROTOCOL:
+        if protocol in (pkt.ipv4.TCP_PROTOCOL, pkt.ipv6.TCP_PROTOCOL):
             tcp_packet = ip_packet.find('tcp')
             if tcp_packet:
                 src_port = tcp_packet.srcport
                 dst_port = tcp_packet.dstport
                 return ("TCP", src_port, dst_port)
-        elif protocol == pkt.ipv4.UDP_PROTOCOL:
+        elif protocol in (pkt.ipv4.UDP_PROTOCOL, pkt.ipv6.UDP_PROTOCOL):
             udp_packet = ip_packet.find('udp')
             if udp_packet:
                 src_port = udp_packet.srcport
                 dst_port = udp_packet.dstport
                 return ("UDP", src_port, dst_port)
 
-        return ("ICMP" if protocol == pkt.ipv4.ICMP_PROTOCOL else str(protocol), '', '')
+        if protocol in (pkt.ipv4.ICMP_PROTOCOL, pkt.ipv6.ICMP6_PROTOCOL):
+            return ("ICMP", '', '')
+
+        return (str(protocol), '', '')
 
     def _handle_PacketIn(self, event):
         # Se llama cada vez que llega un paquete al controlador
         packet = event.parsed.find('ipv4')
-        # Esto no se si va, pero lo dejo por si acaso, 
-        # sino queda solo ipv4
-        # if not packet:
-        #     packet = event.parsed.find('ipv6')
+        if not packet:
+            packet = event.parsed.find('ipv6')
         if not packet:
             return
 
@@ -127,10 +134,10 @@ class Firewall (EventMixin):
         Establece las políticas de firewall en el evento, si no hay nw_proto o dl_type en la política, genera todas las variantes
         """
 
-        #Bloquea todo el tráfico IPv6 que no coincida con las políticas
-        r = of.ofp_flow_mod()
-        r.match.__setattr__("dl_type", pkt.ethernet.IPV6_TYPE)
-        event.connection.send(r)
+        # #Bloquea todo el tráfico IPv6 que no coincida con las políticas
+        # r = of.ofp_flow_mod()
+        # r.match.__setattr__("dl_type", pkt.ethernet.IPV6_TYPE)
+        # event.connection.send(r)
 
         for policy in self.policies:
 

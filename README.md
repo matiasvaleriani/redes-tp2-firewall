@@ -33,6 +33,14 @@ sudo mn --custom ./topology.py --topo customTopo,switches=${NSWITCHES} --arp --s
 
 ## Casos de prueba
 
+```
+        h1           h3
+         \          /
+          s1--s2--s3
+         /          \  
+        h2           h4
+```
+
 ### Pingall
 
 ```
