@@ -63,8 +63,8 @@ class Firewall (EventMixin):
         """
         if ip_packet.__class__.__name__ == 'ipv4':
             protocol = ip_packet.protocol
-        elif ip_packet.__class__.__name__ == 'ipv6':
-            protocol = ip_packet.next_header_type
+        # elif ip_packet.__class__.__name__ == 'ipv6':
+        #     protocol = ip_packet.next_header_type
         else:
             return (str(type(ip_packet)), '', '')
 
@@ -89,8 +89,8 @@ class Firewall (EventMixin):
     def _handle_PacketIn(self, event):
         # Se llama cada vez que llega un paquete al controlador
         packet = event.parsed.find('ipv4')
-        if not packet:
-            packet = event.parsed.find('ipv6')
+        # if not packet:
+        #     packet = event.parsed.find('ipv6')
         if not packet:
             return
 
@@ -135,9 +135,9 @@ class Firewall (EventMixin):
         """
 
         # #Bloquea todo el tráfico IPv6 que no coincida con las políticas
-        # r = of.ofp_flow_mod()
-        # r.match.__setattr__("dl_type", pkt.ethernet.IPV6_TYPE)
-        # event.connection.send(r)
+        r = of.ofp_flow_mod()
+        r.match.__setattr__("dl_type", pkt.ethernet.IPV6_TYPE)
+        event.connection.send(r)
 
         for policy in self.policies:
 
