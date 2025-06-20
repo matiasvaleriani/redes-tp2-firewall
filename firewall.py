@@ -14,17 +14,20 @@ from pox.lib.revent import *
 from pox.lib.addresses import IPAddr
 import pox.openflow.libopenflow_01 as of
 from pox.core import core
+from constants import (
+    DATA_LINK_TYPE, TRANSPORT_PROTO, DEST_PORT, SOURCE_PORT, DATA_LINK_SRC, DATA_LINK_DEST, SOURCE_IP, DESTINATION_IP
+)
 
 import pox.lib.packet as pkt
 import json
 
 COLOR_CODES = {
-    'CYAN': '\033[96m',
-    'MAGENTA': '\033[95m',
-    'GREEN': '\033[92m',
+    'WHITE': '\033[97m',
     'GREY': '\033[90m',
     'BLACK': '\033[30m',
-    'WHITE': '\033[97m',
+    'MAGENTA': '\033[95m',
+    'CYAN': '\033[96m',
+    'GREEN': '\033[92m',
     'LIGHT_GREEN': '\033[92;1m',
     "RESET": '\033[0m'
 }
@@ -106,9 +109,9 @@ class Firewall (EventMixin):
 
         log.info(
             f"{COLOR_CODES['WHITE']}[SW:{COLOR_CODES['GREEN']}{dpid}{COLOR_CODES['WHITE']}] "
-            f"PROTO:{COLOR_CODES['GREY']}{protocol}{COLOR_CODES['WHITE']} "
             f"SRC:{COLOR_CODES['CYAN']}{sender}{COLOR_CODES['WHITE']} "
-            f"DST:{COLOR_CODES['LIGHT_GREEN']}{receiver}{COLOR_CODES['WHITE']}{COLOR_CODES['RESET']}"
+            f"DEST:{COLOR_CODES['LIGHT_GREEN']}{receiver}{COLOR_CODES['WHITE']}{COLOR_CODES['RESET']}"
+            f"PROTO:{COLOR_CODES['GREY']}{protocol}{COLOR_CODES['WHITE']} "
         )
         
     def _handle_ConnectionUp(self, event):
@@ -136,19 +139,19 @@ class Firewall (EventMixin):
 
         # #Bloquea todo el tráfico IPv6 que no coincida con las políticas
         r = of.ofp_flow_mod()
-        r.match.__setattr__("dl_type", pkt.ethernet.IPV6_TYPE)
+        r.match.__setattr__(DATA_LINK_TYPE, pkt.ethernet.IPV6_TYPE)
         event.connection.send(r)
 
         for policy in self.policies:
 
             policy_variants = [policy]
-            if "nw_proto" not in policy:
+            if TRANSPORT_PROTO not in policy:
                 policy_variants = self._generate_variants(
-                    policy_variants, "nw_proto", NW_PROTO.keys())
+                    policy_variants, TRANSPORT_PROTO, NW_PROTO.keys())
 
-            if "dl_type" not in policy:
+            if DATA_LINK_TYPE not in policy:
                 policy_variants = self._generate_variants(
-                    policy_variants, "dl_type", DL_TYPE.keys())
+                    policy_variants, DATA_LINK_TYPE, DL_TYPE.keys())
 
             for policy_variant in policy_variants:
                 rule = self._rule_from_policy(policy_variant)
@@ -172,23 +175,24 @@ class Firewall (EventMixin):
         """
         Parse the field value based on the field
         """
-        match (field):
-            case "tp_dst":
-                return int(value)
-            case "tp_src":
-                return int(value)
-            case "nw_proto":
-                return NW_PROTO.get(value, None)
-            case "dl_src":
-                return EthAddr(value)
-            case "dl_dst":
-                return EthAddr(value)
-            case "nw_src":
-                return IPAddr(value) if '.' in value else IPAddr6(value)
-            case "nw_dst":
-                return IPAddr(value) if '.' in value else IPAddr6(value)
-            case "dl_type":
-                return DL_TYPE.get(value, None)
+        if field == DEST_PORT:
+            return int(value)
+        elif field == SOURCE_PORT:
+            return int(value)
+        elif field == TRANSPORT_PROTO:
+            return NW_PROTO.get(value, None)
+        elif field == DATA_LINK_SRC:
+            return EthAddr(value)
+        elif field == DATA_LINK_DEST:
+            return EthAddr(value)
+        elif field == SOURCE_IP:
+            return IPAddr(value) if '.' in value else IPAddr6(value)
+        elif field == DESTINATION_IP:
+            return IPAddr(value) if '.' in value else IPAddr6(value)
+        elif field == DATA_LINK_TYPE:
+            return DL_TYPE.get(value, None)
+        else:
+            return None
 
     def _generate_variants(self, policies, field, values):
         """
