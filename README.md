@@ -39,6 +39,7 @@ sudo mn --custom ./topology.py --topo customTopo,switches=${NSWITCHES} --arp --s
 mininet> pingall
 ```
 
+## Se deben descartar todos los mensajes cuyo puerto destino sea 80.
 ### Primera regla
 
 Podemos probar tanto con
@@ -59,6 +60,7 @@ mininet> hX iperf -u -s -p 80&
 mininet> hY iperf -u -c hX -p 80
 ```
 
+## Se deben descartar todos los mensajes que provengan del host 1, tengan como puerto destino el 5001, y estén utilizando el protocolo UDP.
 ### Tercera regla
 
 ```
@@ -66,6 +68,7 @@ mininet> hX iperf -u -s -p 5001&
 mininet> h1 iperf -u -c hX -p 5001
 ```
 
+## Se deben elegir dos hosts cualesquiera y los mismos no deben poder comunicarse de ninguna forma.
 ### Cuarta regla
 
 h2 y h3 no deberian poder comunicarse por lo cual podemos probar con
