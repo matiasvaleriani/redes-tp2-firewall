@@ -1,6 +1,6 @@
 {
-	"firewall_switch_id": 1,
-	"discard_policies": [
+	"switch": 1,
+	"policies": [
 		{
 			"tp_dst": "80",
 			"nw_proto": "tcp",

@@ -21,7 +21,7 @@ from constants import (
 import pox.lib.packet as pkt
 import json
 
-COLOR_CODES = {
+COLORS = {
     'WHITE': '\033[97m',
     'GREY': '\033[90m',
     'BLACK': '\033[30m',
@@ -34,7 +34,7 @@ COLOR_CODES = {
 
 log = core.getLogger()
 
-POLICY_FILE_PATH = "./firewall-policies.json"
+POLICIES_FILE = "./policies.json"
 
 DL_TYPE = {
     "ipv4": pkt.ethernet.IP_TYPE,
@@ -99,19 +99,19 @@ class Firewall (EventMixin):
 
         (protocol, src_port, dst_port) = self.__get_destination(packet)
 
-        sender = COLOR_CODES["CYAN"] + \
-            str(packet.srcip) + f':{src_port}' + COLOR_CODES["RESET"]
-        receiver = COLOR_CODES["MAGENTA"] + \
-            str(packet.dstip) + f':{dst_port}' + COLOR_CODES["RESET"]
+        source = COLORS["CYAN"] + \
+            str(packet.srcip) + f':{src_port}' + COLORS["RESET"]
+        destination = COLORS["MAGENTA"] + \
+            str(packet.dstip) + f':{dst_port}' + COLORS["RESET"]
 
-        dpid = COLOR_CODES['GREEN'] + str(event.dpid) + COLOR_CODES['RESET']
-        protocol = COLOR_CODES['GREY'] + protocol + COLOR_CODES['RESET']
+        switch = COLORS['GREEN'] + str(event.dpid) + COLORS['RESET']
+        protocol = COLORS['GREY'] + protocol + COLORS['RESET']
 
         log.info(
-            f"{COLOR_CODES['WHITE']}[SW:{COLOR_CODES['GREEN']}{dpid}{COLOR_CODES['WHITE']}] "
-            f"SRC:{COLOR_CODES['CYAN']}{sender}{COLOR_CODES['WHITE']} "
-            f"DEST:{COLOR_CODES['LIGHT_GREEN']}{receiver}{COLOR_CODES['WHITE']}{COLOR_CODES['RESET']}"
-            f"PROTO:{COLOR_CODES['GREY']}{protocol}{COLOR_CODES['WHITE']} "
+            f"{COLORS['WHITE']}[SW:{COLORS['GREEN']}{switch}{COLORS['WHITE']}] "
+            f"SRC:{COLORS['CYAN']}{source}{COLORS['WHITE']} "
+            f"DEST:{COLORS['LIGHT_GREEN']}{destination}{COLORS['WHITE']}{COLORS['RESET']} "
+            f"PROTO:{COLORS['GREY']}{protocol}{COLORS['WHITE']} "
         )
         
     def _handle_ConnectionUp(self, event):
@@ -125,12 +125,21 @@ class Firewall (EventMixin):
 
     def load_policies(self):
         """
-        Lee el JSON de las políticas de firewall y las carga en la instancia
+        Carga las reglas del firewall desde el archivo JSON configurado.
         """
-        with open(POLICY_FILE_PATH, 'r') as f:
-            content = json.load(f)
-            self.policies = content["discard_policies"]
-            self.switch_id = content["firewall_switch_id"]
+        try:
+            with open(POLICIES_FILE) as archivo:
+                datos = json.load(archivo)
+                self.policies = datos.get("policies", [])
+                self.switch_id = datos.get("switch", 1)
+        except FileNotFoundError:
+            log.error(f"No se encontró el archivo de políticas: {POLICIES_FILE}")
+            self.policies = []
+            self.switch_id = 1
+        except Exception as e:
+            log.error(f"Error al cargar las políticas: {e}")
+            self.policies = []
+            self.switch_id = 1
 
     def set_policies(self, event):
         """
@@ -138,9 +147,9 @@ class Firewall (EventMixin):
         """
 
         # #Bloquea todo el tráfico IPv6 que no coincida con las políticas
-        r = of.ofp_flow_mod()
-        r.match.__setattr__(DATA_LINK_TYPE, pkt.ethernet.IPV6_TYPE)
-        event.connection.send(r)
+        policy_ipv6 = of.ofp_flow_mod()
+        policy_ipv6.match.__setattr__(DATA_LINK_TYPE, pkt.ethernet.IPV6_TYPE)
+        event.connection.send(policy_ipv6)
 
         for policy in self.policies:
 
@@ -199,15 +208,13 @@ class Firewall (EventMixin):
         Si una politica no especifica un campo, genera variantes para
         todos los valores posibles (TCP, UDP, ICMP).
         """
-        new_policies = []
-
-        for policy in policies:
-            for value in values:
-                __policy = policy.copy()
-                __policy[field] = value
-                new_policies.append(__policy)
-
-        return new_policies
+        resultado = []
+        for pol in policies:
+            for val in values:
+                nueva = pol.copy()
+                nueva[field] = val
+                resultado.append(nueva)
+        return resultado
 
 
 def launch():

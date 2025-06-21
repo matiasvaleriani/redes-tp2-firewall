@@ -1,38 +1,27 @@
-# redes-2025-1c-tp2
-
-# POX Firewall
-
-## Requisitos
-
--   Python 3.11
--   Mininet
--   Make (opcional)
+# TP N2: Software-Defined Networks
 
 ## Ejecucion
 
-Para ejecutar el controlador de pox
+Para instalar pox:
 
 ```
-make run-pox
-
-// o equivalente
-
-python3 ./pox.py forwarding.l2_learning firewall
+make install-pox
 ```
 
-Para ejecutar la topologia de mininet
+Para ejecutar el controlador de pox:
+
+```
+make pox
+```
+
+Para ejecutar la topologia de mininet:
 
 ```
 make mininet
-
-// o equivalente
-
-sudo mn -c  # Clean up first
-sudo mn --custom ./topology.py --topo customTopo,switches=${NSWITCHES} --arp --switch ovsk --controller remote
 ```
 
 ## Casos de prueba
-
+La topologia que planteamos segun el enunciado es de 3 switches con 2 hosts en cada extremo de la cadena de switches.
 ```
         h1           h3
          \          /
@@ -46,38 +35,35 @@ sudo mn --custom ./topology.py --topo customTopo,switches=${NSWITCHES} --arp --s
 ```
 mininet> pingall
 ```
-
-## Se deben descartar todos los mensajes cuyo puerto destino sea 80.
-### Primera regla
+## Caso de prueba 1: se deben descartar todos los mensajes cuyo puerto destino sea 80.
 
 Podemos probar tanto con
 
 ```
 mininet> hX curl hY
+```
 
-// o tambien
-
+o usando iperf:
+```
 mininet> hX iperf -s -p 80&
 mininet> hY iperf -c hX -p 80
 ```
 
-### Segunda regla
+Con UDP:
 
 ```
 mininet> hX iperf -u -s -p 80&
 mininet> hY iperf -u -c hX -p 80
 ```
 
-## Se deben descartar todos los mensajes que provengan del host 1, tengan como puerto destino el 5001, y estén utilizando el protocolo UDP.
-### Tercera regla
+## Caso de prueba 2: se deben descartar todos los mensajes que provengan del host 1, tengan como puerto destino el 5001, y estén utilizando el protocolo UDP.
 
 ```
 mininet> hX iperf -u -s -p 5001&
 mininet> h1 iperf -u -c hX -p 5001
 ```
 
-## Se deben elegir dos hosts cualesquiera y los mismos no deben poder comunicarse de ninguna forma.
-### Cuarta regla
+## Caso de prueba 3: se deben elegir dos hosts cualesquiera y los mismos no deben poder comunicarse de ninguna forma.
 
 h2 y h3 no deberian poder comunicarse por lo cual podemos probar con
 
@@ -97,9 +83,7 @@ mininet> h2 iperf -u -c h3 -p 42069
 mininet> h2 ping h3
 ```
 
-### Quinta regla
-
-h2 y h3 no deberian poder comunicarse por lo cual podemos probar con
+Al reves tampoco podria existir comunicacion:
 
 ```
 // en UDP
