@@ -1,11 +1,11 @@
-DEST_PORT = "destination_port"
-SOURCE_PORT = "source_port"
+DEST_PORT = "tp_dst"
+SOURCE_PORT = "tp_src"
 
-TRANSPORT_PROTO = "transport_protocol"
+TRANSPORT_PROTO = "nw_proto"
 
-DATA_LINK_TYPE = "data_link_type"
-DATA_LINK_SRC = "data_link_src"
-DATA_LINK_DEST = "data_link_dest"
+DATA_LINK_TYPE = "dl_type"
+DATA_LINK_SRC = "dl_src"
+DATA_LINK_DEST = "dl_dst"
 
-SOURCE_IP = "source_ip"
-DESTINATION_IP = "destination_ip"
+SOURCE_IP = "nw_src"
+DESTINATION_IP = "nw_dst"
