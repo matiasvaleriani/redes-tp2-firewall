@@ -108,10 +108,10 @@ class Firewall (EventMixin):
         protocol = COLORS['GREY'] + protocol + COLORS['RESET']
 
         log.info(
-            f"{COLORS['WHITE']}[SW:{COLORS['GREEN']}{switch}{COLORS['WHITE']}] "
+            f"{COLORS['WHITE']}[SWITCH:{COLORS['GREEN']}{switch}{COLORS['WHITE']}] "
             f"SRC:{COLORS['CYAN']}{source}{COLORS['WHITE']} "
-            f"DEST:{COLORS['LIGHT_GREEN']}{destination}{COLORS['WHITE']}{COLORS['RESET']} "
-            f"PROTO:{COLORS['GREY']}{protocol}{COLORS['WHITE']} "
+            f"DST:{COLORS['LIGHT_GREEN']}{destination}{COLORS['WHITE']}{COLORS['RESET']} "
+            f"PROTOCOL:{COLORS['GREY']}{protocol}{COLORS['WHITE']} "
         )
         
     def _handle_ConnectionUp(self, event):
