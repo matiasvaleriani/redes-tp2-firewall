@@ -100,3 +100,11 @@ mininet> h3 iperf -u -c h2 -p 42069
 
 mininet> h3 ping h2
 ```
+
+# Para ver las reglas instaladas en los switches
+
+Podés inspeccionar las reglas de flujo (flow table) instaladas en cada switch usando el siguiente comando desde una terminal de Linux:
+
+```
+sudo ovs-ofctl dump-flows s1
+```
