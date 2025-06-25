@@ -21,6 +21,7 @@ from constants import (
 )
 import pox.lib.packet as pkt
 import json
+from tabulate import tabulate
 
 COLORS = {
     'WHITE': '\033[97m',
@@ -58,6 +59,7 @@ class Firewall (EventMixin):
         log.info("Enabling Firewall Module")
         #PacketIn -> cuando llega un paquete al controlador
         core.openflow.addListenerByName("PacketIn", self._handle_PacketIn)
+        core.openflow.addListenerByName("FlowStatsReceived", self._handle_FlowStatsReceived)
 
     def __get_destination(self, ip_packet):
         """
@@ -89,6 +91,25 @@ class Firewall (EventMixin):
             return ("ICMP", '', '')
 
         return (str(protocol), '', '')
+
+    def print_routing_table(self, connection):
+        # Solicita la tabla de flujos al switch
+        stats_request = of.ofp_stats_request(body=of.ofp_flow_stats_request())
+        connection.send(stats_request)
+
+    def _handle_FlowStatsReceived(self, event):
+        headers = ["Match", "Actions", "Priority", "Packets", "Bytes"]
+        table = []
+        for stat in event.stats:
+            match = str(stat.match)
+            actions = ', '.join([str(a) for a in stat.actions])
+            priority = stat.priority
+            packets = stat.packet_count
+            bytes_ = stat.byte_count
+            table.append([match, actions, priority, packets, bytes_])
+        log.info("Tabla de enrutamiento (flow table) del switch %s:\n%s",
+                 dpidToStr(event.connection.dpid),
+                 tabulate(table, headers=headers, tablefmt="fancy_grid"))
 
     def _handle_PacketIn(self, event):
         # Se llama cada vez que llega un paquete al controlador
@@ -126,7 +147,8 @@ class Firewall (EventMixin):
         # policy_ipv6.match.__setattr__(DATA_LINK_TYPE, pkt.ethernet.IPV6_TYPE)
         # event.connection.send(policy_ipv6)
         # log.info("IPv6 traffic blocked on %s", dpidToStr(event.dpid))
-        
+
+        self.print_routing_table(event.connection)
 
         if event.dpid == self.switch_id:
             self.set_policies(event)
