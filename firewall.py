@@ -7,6 +7,8 @@ Professor: Nick Feamster
 Teaching Assistant: Arpit Gupta
 '''
 import os
+import logging
+logging.getLogger('libopenflow_01').setLevel(logging.ERROR)
 
 from pox.lib.addresses import EthAddr, IPAddr6
 from pox.lib.util import dpidToStr
@@ -17,7 +19,6 @@ from pox.core import core
 from constants import (
     DATA_LINK_TYPE, TRANSPORT_PROTO, DEST_PORT, SOURCE_PORT, DATA_LINK_SRC, DATA_LINK_DEST, SOURCE_IP, DESTINATION_IP
 )
-
 import pox.lib.packet as pkt
 import json
 

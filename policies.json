@@ -3,13 +3,11 @@
 	"policies": [
 		{
 			"tp_dst": "80",
-			"nw_proto": "tcp",
-			"dl_type": "ipv4"
+			"nw_proto": "tcp"
 		},
 		{
 			"tp_dst": "80",
-			"nw_proto": "udp",
-			"dl_type": "ipv4"
+			"nw_proto": "udp"
 		},
 		{
 			"tp_dst": "5001",
