@@ -66,8 +66,8 @@ class Firewall (EventMixin):
         """
         if ip_packet.__class__.__name__ == 'ipv4':
             protocol = ip_packet.protocol
-        # elif ip_packet.__class__.__name__ == 'ipv6':
-        #     protocol = ip_packet.next_header_type
+        elif ip_packet.__class__.__name__ == 'ipv6':
+            protocol = ip_packet.next_header_type
         else:
             return (str(type(ip_packet)), '', '')
 
@@ -92,8 +92,8 @@ class Firewall (EventMixin):
     def _handle_PacketIn(self, event):
         # Se llama cada vez que llega un paquete al controlador
         packet = event.parsed.find('ipv4')
-        # if not packet:
-        #     packet = event.parsed.find('ipv6')
+        if not packet:
+            packet = event.parsed.find('ipv6')
         if not packet:
             return
 
@@ -119,6 +119,14 @@ class Firewall (EventMixin):
         Se ejecuta cuando un switch se conecta al controlador
         Si el switch es el que tiene las políticas de firewall, se instalan las reglas
         """
+
+        # Esto es por si quisiera bloquear el trafico IPv6 en todos los switches
+        # policy_ipv6 = of.ofp_flow_mod()
+        # policy_ipv6.match.__setattr__(DATA_LINK_TYPE, pkt.ethernet.IPV6_TYPE)
+        # event.connection.send(policy_ipv6)
+        # log.info("IPv6 traffic blocked on %s", dpidToStr(event.dpid))
+        
+
         if event.dpid == self.switch_id:
             self.set_policies(event)
             log.info("Firewall rules installed on %s", dpidToStr(event.dpid))
@@ -147,9 +155,9 @@ class Firewall (EventMixin):
         """
 
         # #Bloquea todo el tráfico IPv6 que no coincida con las políticas
-        policy_ipv6 = of.ofp_flow_mod()
-        policy_ipv6.match.__setattr__(DATA_LINK_TYPE, pkt.ethernet.IPV6_TYPE)
-        event.connection.send(policy_ipv6)
+        # policy_ipv6 = of.ofp_flow_mod()
+        # policy_ipv6.match.__setattr__(DATA_LINK_TYPE, pkt.ethernet.IPV6_TYPE)
+        # event.connection.send(policy_ipv6)
 
         for policy in self.policies:
 
