@@ -65,46 +65,30 @@ mininet> h1 iperf -u -c hX -p 5001
 
 ## Caso de prueba 3: se deben elegir dos hosts cualesquiera y los mismos no deben poder comunicarse de ninguna forma.
 
-h2 y h3 no deberian poder comunicarse por lo cual podemos probar con
+h2 y h3 no deberian poder comunicarse por lo cual podemos probar con alguno de los siguientes comandos para probar que no hay comunicacion en ningun sentido:
 
 ```
-// en UDP
+mininet> h3 curl h2
+```
 
-mininet> h3 iperf -u -s -p 42069&
-mininet> h2 iperf -u -c h3 -p 42069
+```
+mininet> h2 curl h3
+```
 
-// o en TCP
-
-mininet> h3 iperf -u -s -p 42069&
-mininet> h2 iperf -u -c h3 -p 42069
-
-// o con ping
-
+```
 mininet> h2 ping h3
 ```
 
-Al reves tampoco podria existir comunicacion:
-
 ```
-// en UDP
-
-mininet> h2 iperf -u -s -p 42069&
-mininet> h3 iperf -u -c h2 -p 42069
-
-// o en TCP
-
-mininet> h2 iperf -u -s -p 42069&
-mininet> h3 iperf -u -c h2 -p 42069
-
-// o con ping
-
 mininet> h3 ping h2
 ```
 
-# Para ver las reglas instaladas en los switches
+# Ver las reglas instaladas en los switches
 
-Podés inspeccionar las reglas de flujo (flow table) instaladas en cada switch usando el siguiente comando desde una terminal de Linux:
+Se puede inspeccionar las reglas de flujo (flow table) instaladas en cada switch usando el siguiente comando desde una terminal de Linux:
 
 ```
-sudo ovs-ofctl dump-flows s1
+sudo ovs-ofctl dump-flows sX
 ```
+
+siendo sX el numero del switch por ejemplo s1, s2, s3.
