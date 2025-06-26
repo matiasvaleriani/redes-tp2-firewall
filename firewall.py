@@ -97,6 +97,18 @@ class Firewall (EventMixin):
         stats_request = of.ofp_stats_request(body=of.ofp_flow_stats_request())
         connection.send(stats_request)
 
+    def print_policy_table(self):
+        headers = ["Rule", "Dst Port", "Transport layer Protocol", "Src MAC Addr", "Dst MAC Addr"]
+        table = []
+        for idx, policy in enumerate(self.policies, 1):
+            rule = f"R_{idx}"
+            dst_port = policy.get("tp_dst", "*")
+            proto = policy.get("nw_proto", "*")
+            src_mac = policy.get("dl_src", "*")
+            dst_mac = policy.get("dl_dst", "*")
+            table.append([rule, dst_port, proto, src_mac, dst_mac])
+        log.info("\n%s", tabulate(table, headers=headers, tablefmt="fancy_grid"))
+
     def _handle_FlowStatsReceived(self, event):
         headers = ["Match", "Actions", "Priority", "Packets", "Bytes"]
         table = []
@@ -148,11 +160,12 @@ class Firewall (EventMixin):
         # event.connection.send(policy_ipv6)
         # log.info("IPv6 traffic blocked on %s", dpidToStr(event.dpid))
 
-        self.print_routing_table(event.connection)
+        
 
         if event.dpid == self.switch_id:
             self.set_policies(event)
             log.info("Firewall rules installed on %s", dpidToStr(event.dpid))
+            self.print_routing_table(event.connection)
 
     def load_policies(self):
         """
@@ -196,6 +209,7 @@ class Firewall (EventMixin):
             for policy_variant in policy_variants:
                 rule = self._rule_from_policy(policy_variant)
                 event.connection.send(rule)
+        self.print_policy_table()
 
     def _rule_from_policy(self, policy):
         """
@@ -246,7 +260,6 @@ class Firewall (EventMixin):
                 nueva[field] = val
                 resultado.append(nueva)
         return resultado
-
 
 def launch():
     '''
